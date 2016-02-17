@@ -1,6 +1,6 @@
 {
   "name": "dom-console",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "console.log output in the dom",
   "main": "domconsole.js",
   "scripts": {
@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/serapath/dom-console/issues"
   },
-  "homepage": "https://github.com/serapath/dom-console#readme"
+  "homepage": "https://github.com/serapath/dom-console#readme",
+  "dependencies": {
+    "hypernal": "^0.3.0"
+  }
 }

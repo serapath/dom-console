@@ -1,6 +1,6 @@
 {
   "name": "dom-console",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "description": "console.log output in the dom",
   "main": "domconsole.js",
   "scripts": {

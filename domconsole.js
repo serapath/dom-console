@@ -28,6 +28,8 @@ term.appendTo('#terminal')
 var logger = { log: javascriptserialize }
 var init = false
 
+module.exports = getLogger
+
 function getLogger (opts) {
   opts = opts || {}
   if (opts.console && !init) {

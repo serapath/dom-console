@@ -1,5 +1,6 @@
 'use strict'
 var javascriptserialize = require('javascript-serialize')
+var escapehtml = require('escape-html')
 
 var style = [
   '#terminal {',
@@ -38,7 +39,7 @@ function getLogger (opts) {
     function consoleLog() {
       old.apply(null, arguments)
       var arr = javascriptserialize.apply(null, arguments)
-      term.write(arr.join('')+'<br><hr><br>')
+      term.write(escapehtml(arr.join(''))+'<br><hr><br>')
     }
      console.log = consoleLog
     logger.log = consoleLog

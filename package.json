@@ -1,6 +1,6 @@
 {
   "name": "dom-console",
-  "version": "2.0.2",
+  "version": "2.1.2",
   "description": "console.log output in the dom",
   "main": "domconsole.js",
   "scripts": {
@@ -24,7 +24,8 @@
   },
   "homepage": "https://github.com/serapath/dom-console#readme",
   "dependencies": {
+    "escape-html": "^1.0.3",
     "hypernal": "^0.3.0",
-    "javascript-serialize": "^1.2.0"
+    "javascript-serialize": "^1.3.0"
   }
 }

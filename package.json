@@ -1,0 +1,26 @@
+{
+  "name": "dom-console",
+  "version": "1.0.0",
+  "description": "console.log output in the dom",
+  "main": "domconsole.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/serapath/dom-console.git"
+  },
+  "keywords": [
+    "dom",
+    "term",
+    "terminal",
+    "console",
+    "browser"
+  ],
+  "author": "serapath <dev@serapath.de> (http://www.github.com/serapath)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/serapath/dom-console/issues"
+  },
+  "homepage": "https://github.com/serapath/dom-console#readme"
+}

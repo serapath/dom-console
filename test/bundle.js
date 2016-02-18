@@ -2347,44 +2347,81 @@ function getKonsole () {
       "padding: 15px 20px 15px 20px;",
       "border-radius: 15px;",
       "bottom: 0;",
-      "width:100%;",
-      "height:30vh;",
+      "width:98%;",
+      "min-height: 50px;",
       "display: flex;",
       "flex-direction:column;",
     "}",
     ".konsole{",
       "font-family: Courier;",
-      "font-size: 16px;",
+      "font-size: 1.9vw;",
       "color: white;",
       "overflow-y: scroll;",
-      "overflow: hissen;",
+      "overflow: auto;",
+      "height: 45vh;",
+      "margin-bottom: 30px;",
     "}",
-    ".error{",
+    ".konsole-error{",
       "color: red;",
     "}",
-    ".normal{",
+    ".konsole-nav{",
+      "position: absolute;",
+      "bottom: 0;",
+      "padding-bottom: 15px;",
+    "}",
+    ".konsole-line{",
+      "margin: 0;",
+      "line-height: 1.5em;",
+    "}",
+    ".konsole-seperator{",
+      "border: 1px dashed #333",
+    "}",
+    ".konsole-button{",
+      "margin-right: 10px;",
+    "}",
+    ".konsole-normal{",
       "color: white;",
+    "}",
+    ".konsole-nav--hidden{",
+      "display: none;",
     "}"
   ].join('')
   document.body.appendChild(style)
+  var clearButton = document.createElement('button')
+  var toggleButton = document.createElement('button')
+  clearButton.innerHTML = 'clear'
+  clearButton.className = 'konsole-button'
+  toggleButton.innerHTML = 'toggle'
+  toggleButton.className = 'konsole-button'
+  clearButton.addEventListener('click', function () {
+    clearKonsole()
+  })
+  toggleButton.addEventListener('click', function () {
+    konsole.classList.toggle('konsole-nav--hidden')
+  })
+  var nav = document.createElement('div')
+  nav.className = 'konsole-nav'
+  nav.appendChild(clearButton)
+  nav.appendChild(toggleButton)
   var konsole = document.createElement('div')
   var wrapper = document.createElement('div')
   wrapper.className = 'konsole-wrapper'
   konsole.className = 'konsole'
   document.body.appendChild(wrapper)
   wrapper.appendChild(konsole)
+  wrapper.appendChild(nav)
   return konsole
 }
 
 function domlog (content) {
   var x = document.createElement('pre')
-  x.className = this
+  x.className = 'konsole-'+this + '  konsole-line'
   x.innerHTML = escapehtml(content)
   konsole.appendChild(x)
   konsole.scrollTop = konsole.scrollHeight
 }
-function clear () {
-  var lines = [].slice.call(document.querySelectorAll('.line'))
+function clearKonsole () {
+  var lines = [].slice.call(document.querySelectorAll('.konsole > *'))
   lines.forEach(function (line) {
     line.parentNode.removeChild(line)
   })
@@ -2402,7 +2439,7 @@ var init = false
 
 module.exports = getLogger
 
-getLogger.clear = clear
+getLogger.clear = clearKonsole
 
 function getLogger (opts) {
   if (!konsole) { konsole = getKonsole() }
@@ -2423,19 +2460,21 @@ function logging () {
   var arr = javascriptserialize.apply(null, arguments)
   arr.forEach(function(val, idx){
     if (types[idx] === 'element') val = beautifyhtml(val)
-    debugger
     if (mode === 'normal') {
       if (c) devToolsLog.call(null, val)
-      splitString(val, 75).forEach(function (line) {
+      splitString(val, 60).forEach(function (line) {
         domlog.call('normal', line)
       })
     } else {
       if (c) devToolsError.call(null, val)
-      splitString(val, 75).forEach(function (line) {
+      splitString(val, 60).forEach(function (line) {
         domlog.call('error', line)
       })
     }
   })
+  var hr = document.createElement('hr')
+  hr.className = 'konsole-seperator'
+  konsole.appendChild(hr)
 }
 
 var currentErrorEvent

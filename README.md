@@ -4,6 +4,9 @@ console.log output in the dom
 ## description
 very convenient when experimenting with npm libraries in the browser using [requirebin.com](http://requirebin.com/)
 
+It add's a read only terminal to the bottom of the page, which can be
+cleared and minimized/maximized via buttons
+
 ## example
 go to [requirebin.com](http://requirebin.com/) and copy & paste example below
 

@@ -126,20 +126,18 @@ function splitString (string, size) {
 }
 function logging () {
   var mode = this.mode, c = this.console
+  debugger
+  if (mode === 'normal') { if (c) devToolsLog.apply(null,arguments) }
+  else if (c) devToolsError.apply(null, arguments)
   var types = [].slice.call(arguments).map(function(arg){ return type(arg)})
   javascriptserialize.apply(null, arguments).forEach(function(val, idx){
     if (types[idx] === 'element') val = beautifyhtml(val)
-    if (mode === 'normal') {
-      if (c) devToolsLog.call(null, val)
-      splitString(val, 60).forEach(function (line) {
-        domlog.call('normal', line)
-      })
-    } else {
-      if (c) devToolsError.call(null, val)
-      splitString(val, 60).forEach(function (line) {
-        domlog.call('error', line)
-      })
-    }
+    if (mode === 'normal') splitString(val, 60).forEach(function (line) {
+      domlog.call('normal', line)
+    })
+    else splitString(val, 60).forEach(function (line) {
+      domlog.call('error', line)
+    })
   })
   var hr = document.createElement('hr')
   hr.className = 'konsole-seperator'

@@ -126,7 +126,6 @@ function splitString (string, size) {
 }
 function logging () {
   var mode = this.mode, c = this.console
-  debugger
   if (mode === 'normal') { if (c) devToolsLog.apply(null,arguments) }
   else if (c) devToolsError.apply(null, arguments)
   var types = [].slice.call(arguments).map(function(arg){ return type(arg)})

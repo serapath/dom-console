@@ -1,5 +1,7 @@
 require('..')({console:true})
 
+console.log({a: '5'})
+console.error({a: '5'})
 console.log(document.createElement('div'))
 console.error(document.createElement('div'))
 var div = document.createElement('div')

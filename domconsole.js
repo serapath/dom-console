@@ -127,8 +127,7 @@ function splitString (string, size) {
 function logging () {
   var mode = this.mode, c = this.console
   var types = [].slice.call(arguments).map(function(arg){ return type(arg)})
-  var arr = javascriptserialize.apply(null, arguments)
-  arr.forEach(function(val, idx){
+  javascriptserialize.apply(null, arguments).forEach(function(val, idx){
     if (types[idx] === 'element') val = beautifyhtml(val)
     if (mode === 'normal') {
       if (c) devToolsLog.call(null, val)
@@ -147,15 +146,19 @@ function logging () {
   konsole.appendChild(hr)
 }
 
-var currentErrorEvent
+var currentError
 window.addEventListener('error', function (event) {
-  currentErrorEvent = event
+  currentError = new Error(event.message)
+  currentError.timeStamp = event.timeStamp
+  currentError.isTrusted = event.isTrusted
+  currentError.filename = event.filename
+  currentError.lineno = event.lineno
+  currentError.colno = event.colno
+  currentError.error = event.error
+  currentError.type = event.type
 })
 window.onerror = function(msg, url, lineno, col, error) {
-  error = javascriptserialize(error)
-  event = javascriptserialize(currentErrorEvent)
-  var val = {
-    msg: msg, url: url, lineno: lineno, col: col, error: error, event: event
-  }
+  error = error ? error : currentError
+  var val = { msg: msg, url: url, lineno: lineno, col: col, error: error }
   logger.error(val)
 }

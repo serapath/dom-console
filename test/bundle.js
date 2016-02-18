@@ -2457,8 +2457,7 @@ function splitString (string, size) {
 function logging () {
   var mode = this.mode, c = this.console
   var types = [].slice.call(arguments).map(function(arg){ return type(arg)})
-  var arr = javascriptserialize.apply(null, arguments)
-  arr.forEach(function(val, idx){
+  javascriptserialize.apply(null, arguments).forEach(function(val, idx){
     if (types[idx] === 'element') val = beautifyhtml(val)
     if (mode === 'normal') {
       if (c) devToolsLog.call(null, val)
@@ -2477,16 +2476,20 @@ function logging () {
   konsole.appendChild(hr)
 }
 
-var currentErrorEvent
+var currentError
 window.addEventListener('error', function (event) {
-  currentErrorEvent = event
+  currentError = new Error(event.message)
+  currentError.timeStamp = event.timeStamp
+  currentError.isTrusted = event.isTrusted
+  currentError.filename = event.filename
+  currentError.lineno = event.lineno
+  currentError.colno = event.colno
+  currentError.error = event.error
+  currentError.type = event.type
 })
 window.onerror = function(msg, url, lineno, col, error) {
-  error = javascriptserialize(error)
-  event = javascriptserialize(currentErrorEvent)
-  var val = {
-    msg: msg, url: url, lineno: lineno, col: col, error: error, event: event
-  }
+  error = error ? error : currentError
+  var val = { msg: msg, url: url, lineno: lineno, col: col, error: error }
   logger.error(val)
 }
 
@@ -4555,16 +4558,12 @@ module.exports = javascriptserialize
 
 function javascriptserialize () {
   return [].slice.call(arguments).map(function (item) {
-    var x
     try {
       if (type(item) === 'arguments') item = [].slice.call(item)
       else if (type(item) === 'element') item = domserialize(item)
       else if (type(item) === 'nan') item = 'NaN'
-      // @TODO: is it possible to enrich error messages?
-      else if (type(item) === 'error') item = 'Error: '+item.message
       else if (type(item) === 'regexp') item = item+''
-      for(var i in item) if (!item.hasOwnProperty(i)) item[i] = item[i]
-      x = JSON.parse(stringify(item))
+      var x = JSON.parse(stringify(item))
       x = CircularJSON.stringify(x)
       if (x === undefined) throw new Error()
       else item = JSON.stringify(JSON.parse(x), null, 2)
@@ -8392,6 +8391,8 @@ module.exports = {
 },{}],22:[function(require,module,exports){
 require('..')({console:true})
 
+console.log({a: '5'})
+console.error({a: '5'})
 console.log(document.createElement('div'))
 console.error(document.createElement('div'))
 var div = document.createElement('div')

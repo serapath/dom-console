@@ -4560,6 +4560,11 @@ function javascriptserialize () {
       else if (type(item) === 'element') item = domserialize(item)
       else if (type(item) === 'nan') item = 'NaN'
       else if (type(item) === 'regexp') item = item+''
+      else if (type(item) === 'error') {
+        item._message = item.message
+        item._stack = item.stack
+        item._name = item.name
+      }
       var x = JSON.parse(stringify(item))
       x = CircularJSON.stringify(x)
       if (x === undefined) throw new Error()
@@ -8388,6 +8393,7 @@ module.exports = {
 },{}],22:[function(require,module,exports){
 require('..')({console:true})
 
+console.error(new Error('Ups! Something wrong...'))
 console.log({a: '5'})
 console.error({a: '5'})
 console.log(document.createElement('div'))

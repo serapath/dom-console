@@ -1,5 +1,6 @@
 require('..')({console:true})
 
+console.error(new Error('Ups! Something wrong...'))
 console.log({a: '5'})
 console.error({a: '5'})
 console.log(document.createElement('div'))

@@ -37,8 +37,9 @@ console.log([])
 console.log(document.createElement('div'))
 console.log(NaN)
 
-// @TODO: this one works not on requirebin.com
-// => if somebody figures out why - please let me know :-)
+// This one should not be used on requirebin.com
+// => the stack trace is very long, so it'll take some time
+
 // console.log(new Error('Ups! Something wrong...'))
 
 ```

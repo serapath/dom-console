@@ -36,7 +36,10 @@ console.log((function(){ return arguments })(1,true))
 console.log([])
 console.log(document.createElement('div'))
 console.log(NaN)
-console.log(new Error('Ups! Something wrong...'))
+
+// @TODO: this one works not on requirebin.com
+// => if somebody figures out why - please let me know :-)
+// console.log(new Error('Ups! Something wrong...'))
 
 ```
 or

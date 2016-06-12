@@ -58,16 +58,21 @@ function getKonsole () {
   ].join('')
   document.body.appendChild(style)
   var clearButton = document.createElement('button')
-  var toggleButton = document.createElement('button')
   clearButton.innerHTML = 'clear'
   clearButton.className = 'konsole-button'
-  toggleButton.innerHTML = 'toggle'
+  var toggleButton = document.createElement('button')
+  var state = localStorage.getItem('dom-console/konsole')
+  toggleButton.innerHTML = state ? state : 'expand'
   toggleButton.className = 'konsole-button'
   clearButton.addEventListener('click', function () {
     clearKonsole()
   })
   toggleButton.addEventListener('click', function () {
-    konsole.classList.toggle('konsole-nav--hidden')
+    var next = toggleButton.innerHTML === 'expand' ? 'minimize' : 'expand'
+    toggleButton.innerHTML = next
+    localStorage.setItem('dom-console/konsole', next)
+    if (next === 'expand') konsole.classList.add('konsole-nav--hidden')
+    else konsole.classList.remove('konsole-nav--hidden')
   })
   var nav = document.createElement('div')
   nav.className = 'konsole-nav'
@@ -76,7 +81,8 @@ function getKonsole () {
   var konsole = document.createElement('div')
   var wrapper = document.createElement('div')
   wrapper.className = 'konsole-wrapper'
-  konsole.className = 'konsole'
+  var name = 'konsole ' + ((state==='expand')?'konsole-nav--hidden':'')
+  konsole.className = name
   document.body.appendChild(wrapper)
   wrapper.appendChild(konsole)
   wrapper.appendChild(nav)

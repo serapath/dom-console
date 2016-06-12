@@ -7,7 +7,7 @@ var type = require('component-type')
   LOGGING
 ********************************************************************/
 var konsole
-function getKonsole () {
+function getKonsole (initAction) {
   var style = document.createElement('style')
   style.innerHTML = [
     ".konsole-wrapper {",
@@ -61,7 +61,8 @@ function getKonsole () {
   clearButton.innerHTML = 'clear'
   clearButton.className = 'konsole-button'
   var toggleButton = document.createElement('button')
-  var state = localStorage.getItem('dom-console/konsole')
+  try { var state = localStorage.getItem('dom-console/konsole')
+  } catch (e) { } finally { state = state ? state : initAction }
   toggleButton.innerHTML = state ? state : 'expand'
   toggleButton.className = 'konsole-button'
   clearButton.addEventListener('click', function () {
@@ -70,7 +71,7 @@ function getKonsole () {
   toggleButton.addEventListener('click', function () {
     var next = toggleButton.innerHTML === 'expand' ? 'minimize' : 'expand'
     toggleButton.innerHTML = next
-    localStorage.setItem('dom-console/konsole', next)
+    try { localStorage.setItem('dom-console/konsole', next) } catch (e) { }
     if (next === 'expand') konsole.classList.add('konsole-nav--hidden')
     else konsole.classList.remove('konsole-nav--hidden')
   })
@@ -118,7 +119,7 @@ module.exports = getLogger
 getLogger.clear = clearKonsole
 
 function getLogger (opts) {
-  if (!konsole) { konsole = getKonsole() }
+  if (!konsole) { konsole = getKonsole(opts.initAction) }
   opts = opts || {}
   if (opts.console && !init) {
     init = true

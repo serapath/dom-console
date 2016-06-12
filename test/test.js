@@ -1,4 +1,6 @@
-require('..')({console:true})
+var consoleState = 'minimize' // 'minimize'
+var opts = {console:true, initAction: consoleState}
+require('..')(opts)
 
 
 

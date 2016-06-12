@@ -13,7 +13,8 @@ go to [requirebin.com](http://requirebin.com/) and copy & paste example below
 ```js
 var Buffer = require('buffer').Buffer
 
-require('dom-console')({console:true})
+var consoleState = 'expand' // 'minimize'
+require('dom-console')({console:true, initAction: consoleState})
 
 console.log(new Buffer(5))
 

@@ -11,7 +11,7 @@ function getKonsole (initAction) {
   var style = document.createElement('style')
   style.innerHTML = [
     ".konsole-wrapper {",
-      "position: absolute;",
+      "position: fixed;",
       "box-sizing: border-box;",
       "background-color: black;",
       "padding: 15px 20px 15px 20px;",

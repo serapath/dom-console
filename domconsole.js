@@ -119,8 +119,10 @@ module.exports = getLogger
 getLogger.clear = clearKonsole
 
 function getLogger (opts) {
-  if (!konsole) { konsole = getKonsole(opts.initAction) }
   opts = opts || {}
+  if (!opts.initAction) opts.initAction = 'minimize' // 'expand'
+  if (!opts.console) opts.console = true
+  if (!konsole) { konsole = getKonsole(opts.initAction) }
   if (opts.console && !init) {
     init = true
     console.log = logger.log = logging.bind({mode:'normal',console:true})

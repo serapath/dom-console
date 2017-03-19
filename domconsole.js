@@ -118,7 +118,7 @@ function getKonsole () {
 }
 
 function toggle () {
-  var toggleButton = this
+  var toggleButton = konsole.parentElement.querySelector('.konsole-button')
   var next = toggleButton.innerHTML === 'expand' ? 'minimize' : 'expand'
   toggleButton.innerHTML = next
   if (next === 'expand') konsole.classList.add('konsole-nav--hidden')
@@ -146,7 +146,7 @@ function getLogger () {
     console.info  = logger.info  = logging.bind('info')
   }
   var api = {
-    toggle: function () { toggleButton.click() },
+    toggle: toggle,
     clear: clearKonsole,
     serialize: function () { return konsole.innerText }
   }
@@ -163,7 +163,6 @@ function logging () {
   else if (mode === 'error') { devToolsError.apply(null,arguments) }
   else if (mode === 'info') { devToolsInfo.apply(null,arguments) }
 
-  if (mode === 'info') debugger
   var types = [].slice.call(arguments).map(function(arg){ return type(arg)})
   javascriptserialize.apply(null, arguments).forEach(function(val, idx){
     if (types[idx] === 'element') val = beautifyhtml(val)

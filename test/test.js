@@ -1,11 +1,5 @@
-var consoleState = 'minimize' // 'minimize'
-var opts = {console:true, initAction: consoleState}
-require('..')(opts)
-
-
-
 var Buffer = require('buffer').Buffer
-
+var api = require('..')()
 
 console.log(new Buffer(5))
 
@@ -29,10 +23,6 @@ console.log([])
 console.log(document.createElement('div'))
 console.log(NaN)
 debugger
-console.log(new Error('Ups! Something wrong...'))
-
-
-console.error(new Error('Ups! Something wrong...'))
 console.log({a: '5'})
 console.error({a: '5'})
 console.log(document.createElement('div'))
@@ -44,5 +34,14 @@ console.log('WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW W
 
 console.info('it works :-)')
 
+// api usage
+api.toggle() // expand or minimize the dom-console
+console.log(api.serialize()) // retrieve the log that was logged to the dom-console
+api.clear() // clear the content of the dom-console
+
+// also logs errors nicely
 function test (p) { var x = JSON.parse(p) }
 test(function(){})
+
+console.log(new Error('Ups! Something wrong...'))
+console.error(new Error('Ups! Something wrong...'))

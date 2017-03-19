@@ -1,10 +1,10 @@
 {
   "name": "dom-console",
-  "version": "3.2.0",
+  "version": "4.0.0",
   "description": "console.log output in the dom",
   "main": "domconsole.js",
   "scripts": {
-    "test": "browserify test/test.js > test/bundle.js"
+    "test": "browserify test/test.js > test/bundle.js && opn test/index.html"
   },
   "repository": {
     "type": "git",
@@ -28,5 +28,8 @@
     "escape-html": "^1.0.3",
     "javascript-serialize": "^1.6.1",
     "js-beautify": "^1.6.2"
+  },
+  "devDependencies": {
+    "opn-cli": "^3.1.0"
   }
 }

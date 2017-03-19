@@ -42,5 +42,7 @@ div.innerHTML = '<div><div>asdf</div></div>'
 console.log(div)
 console.log('WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW ')
 
+console.info('it works :-)')
+
 function test (p) { var x = JSON.parse(p) }
 test(function(){})

@@ -2566,7 +2566,7 @@ function getKonsole () {
 }
 
 function toggle () {
-  var toggleButton = konsole.parentElement.querySelector('.konsole-button')
+  var toggleButton = konsole.parentElement.querySelectorAll('.konsole-button')[1]
   var next = toggleButton.innerHTML === 'expand' ? 'minimize' : 'expand'
   toggleButton.innerHTML = next
   if (next === 'expand') konsole.classList.add('konsole-nav--hidden')
@@ -8566,7 +8566,6 @@ console.log('WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW WWWWWWWWWW W
 
 console.info('it works :-)')
 
-window.API = api
 // api usage
 api.toggle() // expand or minimize the dom-console
 console.log(api.serialize()) // retrieve the log that was logged to the dom-console

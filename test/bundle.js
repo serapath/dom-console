@@ -2562,6 +2562,8 @@ function getKonsole () {
 
   document.body.appendChild(wrapper)
 
+  toggle()
+
   return konsole
 }
 

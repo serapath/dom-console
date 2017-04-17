@@ -1,10 +1,13 @@
 var Buffer = require('buffer').Buffer
-var api = require('..')()
+window.domconsole = require('..')
+window.demo = domconsole()
 
 console.log(new Buffer(5))
 
 var x = { leaf: 'leaf' }
-x['aCircle'] = x
+x['circular1'] = x
+x.y = {}
+x.y.circular2 = x.y
 console.log(x)
 
 console.log({a:'x', fn:function(x){return 5}})
@@ -22,7 +25,7 @@ console.log((function(){ return arguments })(1,true))
 console.log([])
 console.log(document.createElement('div'))
 console.log(NaN)
-debugger
+
 console.log({a: '5'})
 console.error({a: '5'})
 console.log(document.createElement('div'))
@@ -38,6 +41,10 @@ console.info('it works :-)')
 api.toggle() // expand or minimize the dom-console
 console.log(api.serialize()) // retrieve the log that was logged to the dom-console
 api.clear() // clear the content of the dom-console
+
+api.log('visible in devtools console & only this dom-console instance')
+api.info('visible in devtools console & only this dom-console instance')
+api.error('visible in devtools console & only this dom-console instance')
 
 // also logs errors nicely
 function test (p) { var x = JSON.parse(p) }

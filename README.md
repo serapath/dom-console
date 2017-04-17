@@ -2,22 +2,26 @@
 console.log output in the dom
 
 ## description
-very convenient when experimenting with npm libraries in the browser using [requirebin.com](http://requirebin.com/)
+very convenient when experimenting with npm libraries in the browser. For example using [requirebin.com](http://requirebin.com/)
 
-It add's a read only terminal to the bottom of the page, which can be
-cleared and minimized/maximized via buttons
+By default.it adds a console DOM element to the bottom of the page, which can be cleared and minimized/maximized via buttons and shows everything that can otherwise be seen in the DevTools JavaScript console.
 
 ## example
-go to [requirebin.com](http://requirebin.com/) and copy & paste example below
+see http://serapath.github.io/dom-console
 
+## usage
 ```js
 var Buffer = require('buffer').Buffer
-var api = require('dom-console')()
+var domconsole = require('dom-console')
+var opts = { lineLength: 60 } // default
+var api = /*element*/ domconsole(/*opts*/).api
 
 console.log(new Buffer(5))
 
 var x = { leaf: 'leaf' }
-x['aCircle'] = x
+x['circular1'] = x
+x.y = {}
+x.y.circular2 = x.y
 console.log(x)
 
 console.log({a:'x', fn:function(x){return 5}})
@@ -52,9 +56,14 @@ api.toggle() // expand or minimize the dom-console
 console.log(api.serialize()) // retrieve the log that was logged to the dom-console
 api.clear() // clear the content of the dom-console
 
+api.log('visible in devtools console & only this dom-console instance')
+api.info('visible in devtools console & only this dom-console instance')
+api.error('visible in devtools console & only this dom-console instance')
+
 // also logs errors nicely
 function test (p) { var x = JSON.parse(p) }
 test(function(){})
 
 console.log(new Error('Ups! Something wrong...'))
 console.error(new Error('Ups! Something wrong...'))
+```

@@ -1,0 +1,27 @@
+<body>
+  <a href="http://npmjs.org/package/dom-console">dom-console</a>
+  (check the README and/or SOURCE CODE for more information)
+  <h2>initialized with:</h2>
+  <xmp style="background-color: #eee; width: 50vmax;">
+    window.domconsole = require('dom-console')
+    window.demo = domconsole()
+  </xmp>
+  <h2> Open developer tools and play with the api </h2>
+  <xmp style="background-color: #eee; width: 50vmax;">
+    // for example:
+
+    demo.api.toggle()
+    demo.api.log('hello demo')
+
+    var el = domconsole({ lineLength: 5 })
+    var api = el.api
+
+    api.log('hello el')
+
+    console.log('hello both')
+
+    document.body.appendChild(el)
+  </xmp>
+
+  <script src="bundle.js"></script>
+</body>

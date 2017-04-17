@@ -115,6 +115,8 @@ function fromByteArray (uint8) {
 }
 
 },{}],2:[function(require,module,exports){
+
+},{}],3:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -1822,7 +1824,7 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":1,"ieee754":3}],3:[function(require,module,exports){
+},{"base64-js":1,"ieee754":4}],4:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -1908,7 +1910,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -2445,26 +2447,16 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 var javascriptserialize = require('javascript-serialize')
 var escapehtml = require('escape-html')
 var jsbeautify = require('js-beautify')
 var type = require('component-type')
-
-module.exports = getLogger
-
-var konsole
-var beautifyhtml  = jsbeautify.html
-var devToolsLog   = console.log.bind(console)
-var devToolsError = console.error.bind(console)
-var devToolsInfo  = console.info.bind(console)
-var logger = {
-  log   : console.log.bind(console),
-  info  : console.info.bind(console),
-  error : console.error.bind(console)
-}
+var bel = require('bel')
+var csjs = require('csjs-inject')
 
 var currentError
+
 window.addEventListener('error', function (event) {
   currentError = new Error(event.message)
   currentError.timeStamp = event.timeStamp
@@ -2475,163 +2467,309 @@ window.addEventListener('error', function (event) {
   currentError.error = event.error
   currentError.type = event.type
 })
-window.onerror = function(msg, url, lineno, col, error) {
+
+window.onerror = function (msg, url, lineno, col, error) {
   error = error ? error : currentError
   var val = { msg: msg, url: url, lineno: lineno, col: col, error: error }
-  logger.error(val)
+  console.error(val)
 }
 
-function getKonsole () {
-  var style = document.createElement('style')
-  style.innerHTML = [
-    ".konsole-wrapper {",
-      "position: fixed;",
-      "box-sizing: border-box;",
-      "background-color: black;",
-      "padding: 15px 20px 15px 20px;",
-      "border-radius: 15px;",
-      "bottom: 0;",
-      "width:98%;",
-      "min-height: 50px;",
-      "display: flex;",
-      "flex-direction:column;",
-    "}",
-    ".konsole{",
-      "font-family: Courier;",
-      "font-size: 1.9vw;",
-      "color: white;",
-      "overflow-y: scroll;",
-      "overflow: auto;",
-      "height: 45vh;",
-      "margin-bottom: 30px;",
-    "}",
-    ".konsole-error{",
-      "color: red;",
-    "}",
-    ".konsole-nav{",
-      "position: absolute;",
-      "bottom: 0;",
-      "padding-bottom: 15px;",
-    "}",
-    ".konsole-line{",
-      "margin: 0;",
-      "line-height: 1.5em;",
-    "}",
-    ".konsole-seperator{",
-      "border: 1px dashed #333",
-    "}",
-    ".konsole-button{",
-      "margin-right: 10px;",
-    "}",
-    ".konsole-normal{",
-      "color: white;",
-    "}",
-    ".konsole-info{",
-      "color: blue;",
-    "}",
-    ".konsole-nav--hidden{",
-      "display: none;",
-    "}"
-  ].join('')
-  document.body.appendChild(style)
+var KONSOLES = [{
+  error       : console.error.bind(console),
+  info        : console.info.bind(console),
+  log         : console.log.bind(console)
+}]
+console.error = broadcast('error')
+console.info = broadcast('info')
+console.log = broadcast('log')
 
-  var clearButton = document.createElement('button')
-  clearButton.innerHTML = 'clear'
-  clearButton.className = 'konsole-button'
-
-  var toggleButton = document.createElement('button')
-  toggleButton.innerHTML = 'expand'
-  toggleButton.className = 'konsole-button'
-
-  clearButton.addEventListener('click', clearKonsole)
-  toggleButton.addEventListener('click', toggle)
-
-  var nav = document.createElement('div')
-  nav.className = 'konsole-nav'
-  nav.appendChild(clearButton)
-  nav.appendChild(toggleButton)
-
-  var wrapper = document.createElement('div')
-  wrapper.className = 'konsole-wrapper'
-
-  konsole = document.createElement('div')
-  konsole.className = 'konsole '
-
-  wrapper.appendChild(konsole)
-  wrapper.appendChild(nav)
-
-  document.body.appendChild(wrapper)
-
-  toggle()
-
-  return konsole
-}
-
-function toggle () {
-  var toggleButton = konsole.parentElement.querySelectorAll('.konsole-button')[1]
-  var next = toggleButton.innerHTML === 'expand' ? 'minimize' : 'expand'
-  toggleButton.innerHTML = next
-  if (next === 'expand') konsole.classList.add('konsole-nav--hidden')
-  else konsole.classList.remove('konsole-nav--hidden')
-}
-
-function domlog (content) {
-  var x = document.createElement('pre')
-  x.className = 'konsole-'+this + '  konsole-line'
-  x.innerHTML = escapehtml(content)
-  konsole.appendChild(x)
-  konsole.scrollTop = konsole.scrollHeight
-}
-
-function clearKonsole () {
-  var lines = [].slice.call(document.querySelectorAll('.konsole > *'))
-  lines.forEach(function (line) { line.parentNode.removeChild(line) })
-}
-
-function getLogger () {
-  if (!konsole) {
-    getKonsole()
-    console.log   = logger.log   = logging.bind('normal')
-    console.error = logger.error = logging.bind('error')
-    console.info  = logger.info  = logging.bind('info')
+function broadcast (mode) {
+  return function broadcastMode () {
+    var args = arguments
+    KONSOLES.forEach(function (api) { api[mode].apply(null, args) })
   }
+}
+
+module.exports = domconsole
+
+var css = csjs`
+  .wrapper            {
+    position          : fixed;
+    box-sizing        : border-box;
+    background-color  : black;
+    padding           : 15px 20px 15px 20px;
+    border-radius     : 15px;
+    bottom            : 0;
+    width             : 98%;
+    min-height        : 50px;
+    display           : flex;
+    flex-direction    : column;
+  }
+  @media screen and (min-width: 0px) {
+    .konsole          {
+      font-size       : calc(0.5em + 1vmin);
+    }
+  }
+  .konsole            {
+    font-family       : Courier;
+    color             : white;
+    overflow-y        : scroll;
+    overflow          : auto;
+    height            : 45vh;
+    margin-bottom     : 30px;
+  }
+  .nav                {
+    position          : absolute;
+    bottom            : 0;
+    padding-bottom    : 15px;
+  }
+  .btn                {
+    margin-right      : 10px;
+  }
+  .line               {
+    margin            : 0;
+    line-height       : 1.5em;
+  }
+  .seperator          {
+    border            : 1px dashed #333
+  }
+  .error              {
+    color             : red;
+  }
+  .info               {
+    color             : blue;
+  }
+  .log                {
+    color             : white;
+  }
+  .hidden             {
+    display           : none;
+  }
+`
+
+function domconsole (opts) {
+  if (!opts) opts = { auto: true }
+  if (!opts.lineLength) opts.lineLength = 60
+
+  var konsole = bel`<div class=${css.konsole}></div>`
+  var bToggle = bel`<button onclick=${flip} class=${css.btn}>minimize</button>`
+  var wrapper = bel`
+    <div class=${css.wrapper}>
+      ${konsole}
+      <div class=${css.nav}>
+        <button onclick=${cleanse} class=${css.btn}> clear </button>
+        ${bToggle}
+        <button class=${css.stats}> ... </button>
+      </div>
+    </div>
+  `
+
+  var dispatch = dispatcher(konsole, opts)
+
   var api = {
-    toggle: toggle,
-    clear: clearKonsole,
-    serialize: function () { return konsole.innerText }
+    log         : dispatch('log'),
+    info        : dispatch('info'),
+    error       : dispatch('error'),
+    toggle      : flip,
+    clear       : cleanse,
+    serialize   : function serializeKonsole () { return konsole.innerText }
   }
-  return api
+  wrapper.api = api
+
+  register(api)
+
+  if (opts.auto) {
+    flip() // start minimized
+    document.body.appendChild(wrapper)
+  }
+
+  return wrapper
+
+  function flip () {
+    var state = konsole.classList.toggle(css.hidden)
+    bToggle.innerHTML = state ? 'expand' : 'minimize'
+  }
+  function cleanse () { konsole.innerHTML = '' }
 }
 
-function splitString (string, size) {
-	return string.match(new RegExp('.{1,' + size + '}', 'g'));
+function register (api) { KONSOLES.push(api) }
+
+function dispatcher (konsole, opts) {
+  return function dispatch (mode) {
+    return function logger () {
+      if (this !== window) KONSOLES[0][mode].apply(null, arguments)
+      var types = [].slice.call(arguments).map(type)
+      javascriptserialize.apply(null, arguments).forEach(function (val, idx) {
+        if (types[idx] === 'element') val = jsbeautify.html(val)
+        var lines = val.match(new RegExp('.{1,' + opts.lineLength + '}', 'g'))
+        lines.forEach(function (line) {
+          var el = bel`<pre class="${css.line} ${css[mode]}">${line}</pre>`
+          konsole.appendChild(el)
+        })
+        var sep = bel`<hr class=${css.seperator}>`
+        konsole.appendChild(sep)
+        sep.scrollIntoView()
+      })
+    }
+  }
 }
 
-function logging () {
-  var mode = this + ''
-  if (mode === 'normal') { devToolsLog.apply(null,arguments) }
-  else if (mode === 'error') { devToolsError.apply(null,arguments) }
-  else if (mode === 'info') { devToolsInfo.apply(null,arguments) }
+},{"bel":7,"component-type":9,"csjs-inject":12,"escape-html":33,"javascript-serialize":41,"js-beautify":42}],7:[function(require,module,exports){
+var document = require('global/document')
+var hyperx = require('hyperx')
+var onload = require('on-load')
 
-  var types = [].slice.call(arguments).map(function(arg){ return type(arg)})
-  javascriptserialize.apply(null, arguments).forEach(function(val, idx){
-    if (types[idx] === 'element') val = beautifyhtml(val)
-    if (mode === 'normal') splitString(val, 60).forEach(function (line) {
-      domlog.call('normal', line)
-    })
-    else if (mode === 'info') splitString(val, 60).forEach(function (line) {
-      domlog.call('info', line)
-    })
-    else splitString(val, 60).forEach(function (line) {
-      domlog.call('error', line)
-    })
-  })
-  var hr = document.createElement('hr')
-  hr.className = 'konsole-seperator'
-  konsole.appendChild(hr)
+var SVGNS = 'http://www.w3.org/2000/svg'
+var XLINKNS = 'http://www.w3.org/1999/xlink'
+
+var BOOL_PROPS = {
+  autofocus: 1,
+  checked: 1,
+  defaultchecked: 1,
+  disabled: 1,
+  formnovalidate: 1,
+  indeterminate: 1,
+  readonly: 1,
+  required: 1,
+  selected: 1,
+  willvalidate: 1
+}
+var COMMENT_TAG = '!--'
+var SVG_TAGS = [
+  'svg',
+  'altGlyph', 'altGlyphDef', 'altGlyphItem', 'animate', 'animateColor',
+  'animateMotion', 'animateTransform', 'circle', 'clipPath', 'color-profile',
+  'cursor', 'defs', 'desc', 'ellipse', 'feBlend', 'feColorMatrix',
+  'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting',
+  'feDisplacementMap', 'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB',
+  'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode',
+  'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting',
+  'feSpotLight', 'feTile', 'feTurbulence', 'filter', 'font', 'font-face',
+  'font-face-format', 'font-face-name', 'font-face-src', 'font-face-uri',
+  'foreignObject', 'g', 'glyph', 'glyphRef', 'hkern', 'image', 'line',
+  'linearGradient', 'marker', 'mask', 'metadata', 'missing-glyph', 'mpath',
+  'path', 'pattern', 'polygon', 'polyline', 'radialGradient', 'rect',
+  'set', 'stop', 'switch', 'symbol', 'text', 'textPath', 'title', 'tref',
+  'tspan', 'use', 'view', 'vkern'
+]
+
+function belCreateElement (tag, props, children) {
+  var el
+
+  // If an svg tag, it needs a namespace
+  if (SVG_TAGS.indexOf(tag) !== -1) {
+    props.namespace = SVGNS
+  }
+
+  // If we are using a namespace
+  var ns = false
+  if (props.namespace) {
+    ns = props.namespace
+    delete props.namespace
+  }
+
+  // Create the element
+  if (ns) {
+    el = document.createElementNS(ns, tag)
+  } else if (tag === COMMENT_TAG) {
+    return document.createComment(props.comment)
+  } else {
+    el = document.createElement(tag)
+  }
+
+  // If adding onload events
+  if (props.onload || props.onunload) {
+    var load = props.onload || function () {}
+    var unload = props.onunload || function () {}
+    onload(el, function belOnload () {
+      load(el)
+    }, function belOnunload () {
+      unload(el)
+    },
+    // We have to use non-standard `caller` to find who invokes `belCreateElement`
+    belCreateElement.caller.caller.caller)
+    delete props.onload
+    delete props.onunload
+  }
+
+  // Create the properties
+  for (var p in props) {
+    if (props.hasOwnProperty(p)) {
+      var key = p.toLowerCase()
+      var val = props[p]
+      // Normalize className
+      if (key === 'classname') {
+        key = 'class'
+        p = 'class'
+      }
+      // The for attribute gets transformed to htmlFor, but we just set as for
+      if (p === 'htmlFor') {
+        p = 'for'
+      }
+      // If a property is boolean, set itself to the key
+      if (BOOL_PROPS[key]) {
+        if (val === 'true') val = key
+        else if (val === 'false') continue
+      }
+      // If a property prefers being set directly vs setAttribute
+      if (key.slice(0, 2) === 'on') {
+        el[p] = val
+      } else {
+        if (ns) {
+          if (p === 'xlink:href') {
+            el.setAttributeNS(XLINKNS, p, val)
+          } else if (/^xmlns($|:)/i.test(p)) {
+            // skip xmlns definitions
+          } else {
+            el.setAttributeNS(null, p, val)
+          }
+        } else {
+          el.setAttribute(p, val)
+        }
+      }
+    }
+  }
+
+  function appendChild (childs) {
+    if (!Array.isArray(childs)) return
+    for (var i = 0; i < childs.length; i++) {
+      var node = childs[i]
+      if (Array.isArray(node)) {
+        appendChild(node)
+        continue
+      }
+
+      if (typeof node === 'number' ||
+        typeof node === 'boolean' ||
+        typeof node === 'function' ||
+        node instanceof Date ||
+        node instanceof RegExp) {
+        node = node.toString()
+      }
+
+      if (typeof node === 'string') {
+        if (el.lastChild && el.lastChild.nodeName === '#text') {
+          el.lastChild.nodeValue += node
+          continue
+        }
+        node = document.createTextNode(node)
+      }
+
+      if (node && node.nodeType) {
+        el.appendChild(node)
+      }
+    }
+  }
+  appendChild(children)
+
+  return el
 }
 
-},{"component-type":7,"escape-html":12,"javascript-serialize":15,"js-beautify":16}],6:[function(require,module,exports){
+module.exports = hyperx(belCreateElement, {comments: true})
+module.exports.default = module.exports
+module.exports.createElement = belCreateElement
+
+},{"global/document":36,"hyperx":39,"on-load":46}],8:[function(require,module,exports){
 /*!
 Copyright (C) 2013 by WebReflection
 
@@ -2817,7 +2955,7 @@ function parseRecursion(text, reviver) {
 }
 this.stringify = stringifyRecursion;
 this.parse = parseRecursion;
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 (function (Buffer){
 /**
  * toString ref.
@@ -2857,7 +2995,503 @@ module.exports = function(val){
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":2}],8:[function(require,module,exports){
+},{"buffer":3}],10:[function(require,module,exports){
+(function (global){
+'use strict';
+
+var csjs = require('csjs');
+var insertCss = require('insert-css');
+
+function csjsInserter() {
+  var args = Array.prototype.slice.call(arguments);
+  var result = csjs.apply(null, args);
+  if (global.document) {
+    insertCss(csjs.getCss(result));
+  }
+  return result;
+}
+
+module.exports = csjsInserter;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"csjs":15,"insert-css":40}],11:[function(require,module,exports){
+'use strict';
+
+module.exports = require('csjs/get-css');
+
+},{"csjs/get-css":14}],12:[function(require,module,exports){
+'use strict';
+
+var csjs = require('./csjs');
+
+module.exports = csjs;
+module.exports.csjs = csjs;
+module.exports.getCss = require('./get-css');
+
+},{"./csjs":10,"./get-css":11}],13:[function(require,module,exports){
+'use strict';
+
+module.exports = require('./lib/csjs');
+
+},{"./lib/csjs":19}],14:[function(require,module,exports){
+'use strict';
+
+module.exports = require('./lib/get-css');
+
+},{"./lib/get-css":23}],15:[function(require,module,exports){
+'use strict';
+
+var csjs = require('./csjs');
+
+module.exports = csjs();
+module.exports.csjs = csjs;
+module.exports.noScope = csjs({ noscope: true });
+module.exports.getCss = require('./get-css');
+
+},{"./csjs":13,"./get-css":14}],16:[function(require,module,exports){
+'use strict';
+
+/**
+ * base62 encode implementation based on base62 module:
+ * https://github.com/andrew/base62.js
+ */
+
+var CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+module.exports = function encode(integer) {
+  if (integer === 0) {
+    return '0';
+  }
+  var str = '';
+  while (integer > 0) {
+    str = CHARS[integer % 62] + str;
+    integer = Math.floor(integer / 62);
+  }
+  return str;
+};
+
+},{}],17:[function(require,module,exports){
+'use strict';
+
+var makeComposition = require('./composition').makeComposition;
+
+module.exports = function createExports(classes, keyframes, compositions) {
+  var keyframesObj = Object.keys(keyframes).reduce(function(acc, key) {
+    var val = keyframes[key];
+    acc[val] = makeComposition([key], [val], true);
+    return acc;
+  }, {});
+
+  var exports = Object.keys(classes).reduce(function(acc, key) {
+    var val = classes[key];
+    var composition = compositions[key];
+    var extended = composition ? getClassChain(composition) : [];
+    var allClasses = [key].concat(extended);
+    var unscoped = allClasses.map(function(name) {
+      return classes[name] ? classes[name] : name;
+    });
+    acc[val] = makeComposition(allClasses, unscoped);
+    return acc;
+  }, keyframesObj);
+
+  return exports;
+}
+
+function getClassChain(obj) {
+  var visited = {}, acc = [];
+
+  function traverse(obj) {
+    return Object.keys(obj).forEach(function(key) {
+      if (!visited[key]) {
+        visited[key] = true;
+        acc.push(key);
+        traverse(obj[key]);
+      }
+    });
+  }
+
+  traverse(obj);
+  return acc;
+}
+
+},{"./composition":18}],18:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  makeComposition: makeComposition,
+  isComposition: isComposition,
+  ignoreComposition: ignoreComposition
+};
+
+/**
+ * Returns an immutable composition object containing the given class names
+ * @param  {array} classNames - The input array of class names
+ * @return {Composition}      - An immutable object that holds multiple
+ *                              representations of the class composition
+ */
+function makeComposition(classNames, unscoped, isAnimation) {
+  var classString = classNames.join(' ');
+  return Object.create(Composition.prototype, {
+    classNames: { // the original array of class names
+      value: Object.freeze(classNames),
+      configurable: false,
+      writable: false,
+      enumerable: true
+    },
+    unscoped: { // the original array of class names
+      value: Object.freeze(unscoped),
+      configurable: false,
+      writable: false,
+      enumerable: true
+    },
+    className: { // space-separated class string for use in HTML
+      value: classString,
+      configurable: false,
+      writable: false,
+      enumerable: true
+    },
+    selector: { // comma-separated, period-prefixed string for use in CSS
+      value: classNames.map(function(name) {
+        return isAnimation ? name : '.' + name;
+      }).join(', '),
+      configurable: false,
+      writable: false,
+      enumerable: true
+    },
+    toString: { // toString() method, returns class string for use in HTML
+      value: function() {
+        return classString;
+      },
+      configurable: false,
+      writeable: false,
+      enumerable: false
+    }
+  });
+}
+
+/**
+ * Returns whether the input value is a Composition
+ * @param value      - value to check
+ * @return {boolean} - whether value is a Composition or not
+ */
+function isComposition(value) {
+  return value instanceof Composition;
+}
+
+function ignoreComposition(values) {
+  return values.reduce(function(acc, val) {
+    if (isComposition(val)) {
+      val.classNames.forEach(function(name, i) {
+        acc[name] = val.unscoped[i];
+      });
+    }
+    return acc;
+  }, {});
+}
+
+/**
+ * Private constructor for use in `instanceof` checks
+ */
+function Composition() {}
+
+},{}],19:[function(require,module,exports){
+'use strict';
+
+var extractExtends = require('./css-extract-extends');
+var composition = require('./composition');
+var isComposition = composition.isComposition;
+var ignoreComposition = composition.ignoreComposition;
+var buildExports = require('./build-exports');
+var scopify = require('./scopeify');
+var cssKey = require('./css-key');
+var extractExports = require('./extract-exports');
+
+module.exports = function csjsTemplate(opts) {
+  opts = (typeof opts === 'undefined') ? {} : opts;
+  var noscope = (typeof opts.noscope === 'undefined') ? false : opts.noscope;
+
+  return function csjsHandler(strings, values) {
+    // Fast path to prevent arguments deopt
+    var values = Array(arguments.length - 1);
+    for (var i = 1; i < arguments.length; i++) {
+      values[i - 1] = arguments[i];
+    }
+    var css = joiner(strings, values.map(selectorize));
+    var ignores = ignoreComposition(values);
+
+    var scope = noscope ? extractExports(css) : scopify(css, ignores);
+    var extracted = extractExtends(scope.css);
+    var localClasses = without(scope.classes, ignores);
+    var localKeyframes = without(scope.keyframes, ignores);
+    var compositions = extracted.compositions;
+
+    var exports = buildExports(localClasses, localKeyframes, compositions);
+
+    return Object.defineProperty(exports, cssKey, {
+      enumerable: false,
+      configurable: false,
+      writeable: false,
+      value: extracted.css
+    });
+  }
+}
+
+/**
+ * Replaces class compositions with comma seperated class selectors
+ * @param  value - the potential class composition
+ * @return       - the original value or the selectorized class composition
+ */
+function selectorize(value) {
+  return isComposition(value) ? value.selector : value;
+}
+
+/**
+ * Joins template string literals and values
+ * @param  {array} strings - array of strings
+ * @param  {array} values  - array of values
+ * @return {string}        - strings and values joined
+ */
+function joiner(strings, values) {
+  return strings.map(function(str, i) {
+    return (i !== values.length) ? str + values[i] : str;
+  }).join('');
+}
+
+/**
+ * Returns first object without keys of second
+ * @param  {object} obj      - source object
+ * @param  {object} unwanted - object with unwanted keys
+ * @return {object}          - first object without unwanted keys
+ */
+function without(obj, unwanted) {
+  return Object.keys(obj).reduce(function(acc, key) {
+    if (!unwanted[key]) {
+      acc[key] = obj[key];
+    }
+    return acc;
+  }, {});
+}
+
+},{"./build-exports":17,"./composition":18,"./css-extract-extends":20,"./css-key":21,"./extract-exports":22,"./scopeify":28}],20:[function(require,module,exports){
+'use strict';
+
+var makeComposition = require('./composition').makeComposition;
+
+var regex = /\.([^\s]+)(\s+)(extends\s+)(\.[^{]+)/g;
+
+module.exports = function extractExtends(css) {
+  var found, matches = [];
+  while (found = regex.exec(css)) {
+    matches.unshift(found);
+  }
+
+  function extractCompositions(acc, match) {
+    var extendee = getClassName(match[1]);
+    var keyword = match[3];
+    var extended = match[4];
+
+    // remove from output css
+    var index = match.index + match[1].length + match[2].length;
+    var len = keyword.length + extended.length;
+    acc.css = acc.css.slice(0, index) + " " + acc.css.slice(index + len + 1);
+
+    var extendedClasses = splitter(extended);
+
+    extendedClasses.forEach(function(className) {
+      if (!acc.compositions[extendee]) {
+        acc.compositions[extendee] = {};
+      }
+      if (!acc.compositions[className]) {
+        acc.compositions[className] = {};
+      }
+      acc.compositions[extendee][className] = acc.compositions[className];
+    });
+    return acc;
+  }
+
+  return matches.reduce(extractCompositions, {
+    css: css,
+    compositions: {}
+  });
+
+};
+
+function splitter(match) {
+  return match.split(',').map(getClassName);
+}
+
+function getClassName(str) {
+  var trimmed = str.trim();
+  return trimmed[0] === '.' ? trimmed.substr(1) : trimmed;
+}
+
+},{"./composition":18}],21:[function(require,module,exports){
+'use strict';
+
+/**
+ * CSS identifiers with whitespace are invalid
+ * Hence this key will not cause a collision
+ */
+
+module.exports = ' css ';
+
+},{}],22:[function(require,module,exports){
+'use strict';
+
+var regex = require('./regex');
+var classRegex = regex.classRegex;
+var keyframesRegex = regex.keyframesRegex;
+
+module.exports = extractExports;
+
+function extractExports(css) {
+  return {
+    css: css,
+    keyframes: getExport(css, keyframesRegex),
+    classes: getExport(css, classRegex)
+  };
+}
+
+function getExport(css, regex) {
+  var prop = {};
+  var match;
+  while((match = regex.exec(css)) !== null) {
+    var name = match[2];
+    prop[name] = name;
+  }
+  return prop;
+}
+
+},{"./regex":25}],23:[function(require,module,exports){
+'use strict';
+
+var cssKey = require('./css-key');
+
+module.exports = function getCss(csjs) {
+  return csjs[cssKey];
+};
+
+},{"./css-key":21}],24:[function(require,module,exports){
+'use strict';
+
+/**
+ * djb2 string hash implementation based on string-hash module:
+ * https://github.com/darkskyapp/string-hash
+ */
+
+module.exports = function hashStr(str) {
+  var hash = 5381;
+  var i = str.length;
+
+  while (i) {
+    hash = (hash * 33) ^ str.charCodeAt(--i)
+  }
+  return hash >>> 0;
+};
+
+},{}],25:[function(require,module,exports){
+'use strict';
+
+var findClasses = /(\.)(?!\d)([^\s\.,{\[>+~#:)]*)(?![^{]*})/.source;
+var findKeyframes = /(@\S*keyframes\s*)([^{\s]*)/.source;
+var ignoreComments = /(?!(?:[^*/]|\*[^/]|\/[^*])*\*+\/)/.source;
+
+var classRegex = new RegExp(findClasses + ignoreComments, 'g');
+var keyframesRegex = new RegExp(findKeyframes + ignoreComments, 'g');
+
+module.exports = {
+  classRegex: classRegex,
+  keyframesRegex: keyframesRegex,
+  ignoreComments: ignoreComments,
+};
+
+},{}],26:[function(require,module,exports){
+var ignoreComments = require('./regex').ignoreComments;
+
+module.exports = replaceAnimations;
+
+function replaceAnimations(result) {
+  var animations = Object.keys(result.keyframes).reduce(function(acc, key) {
+    acc[result.keyframes[key]] = key;
+    return acc;
+  }, {});
+  var unscoped = Object.keys(animations);
+
+  if (unscoped.length) {
+    var regexStr = '((?:animation|animation-name)\\s*:[^};]*)('
+      + unscoped.join('|') + ')([;\\s])' + ignoreComments;
+    var regex = new RegExp(regexStr, 'g');
+
+    var replaced = result.css.replace(regex, function(match, preamble, name, ending) {
+      return preamble + animations[name] + ending;
+    });
+
+    return {
+      css: replaced,
+      keyframes: result.keyframes,
+      classes: result.classes
+    }
+  }
+
+  return result;
+}
+
+},{"./regex":25}],27:[function(require,module,exports){
+'use strict';
+
+var encode = require('./base62-encode');
+var hash = require('./hash-string');
+
+module.exports = function fileScoper(fileSrc) {
+  var suffix = encode(hash(fileSrc));
+
+  return function scopedName(name) {
+    return name + '_' + suffix;
+  }
+};
+
+},{"./base62-encode":16,"./hash-string":24}],28:[function(require,module,exports){
+'use strict';
+
+var fileScoper = require('./scoped-name');
+var replaceAnimations = require('./replace-animations');
+var regex = require('./regex');
+var classRegex = regex.classRegex;
+var keyframesRegex = regex.keyframesRegex;
+
+module.exports = scopify;
+
+function scopify(css, ignores) {
+  var makeScopedName = fileScoper(css);
+  var replacers = {
+    classes: classRegex,
+    keyframes: keyframesRegex
+  };
+
+  function scopeCss(result, key) {
+    var replacer = replacers[key];
+    function replaceFn(fullMatch, prefix, name) {
+      var scopedName = ignores[name] ? name : makeScopedName(name);
+      result[key][scopedName] = name;
+      return prefix + scopedName;
+    }
+    return {
+      css: result.css.replace(replacer, replaceFn),
+      keyframes: result.keyframes,
+      classes: result.classes
+    };
+  }
+
+  var result = Object.keys(replacers).reduce(scopeCss, {
+    css: css,
+    keyframes: {},
+    classes: {}
+  });
+
+  return replaceAnimations(result);
+}
+
+},{"./regex":25,"./replace-animations":26,"./scoped-name":27}],29:[function(require,module,exports){
 (function (global){
 
 var NativeCustomEvent = global.CustomEvent;
@@ -2909,7 +3543,7 @@ function CustomEvent (type, params) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],9:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -3141,7 +3775,7 @@ function serializeNodeList (list, context, fn, eventTarget) {
   return r;
 }
 
-},{"custom-event":8,"ent/encode":10,"extend":13,"void-elements":20}],10:[function(require,module,exports){
+},{"custom-event":29,"ent/encode":31,"extend":34,"void-elements":47}],31:[function(require,module,exports){
 var punycode = require('punycode');
 var revEntities = require('./reversed.json');
 
@@ -3182,7 +3816,7 @@ function encode (str, opts) {
     return chars.join('');
 }
 
-},{"./reversed.json":11,"punycode":4}],11:[function(require,module,exports){
+},{"./reversed.json":32,"punycode":5}],32:[function(require,module,exports){
 module.exports={
     "9": "Tab;",
     "10": "NewLine;",
@@ -4498,7 +5132,7 @@ module.exports={
     "64259": "ffilig;",
     "64260": "ffllig;"
 }
-},{}],12:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /*!
  * escape-html
  * Copyright(c) 2012-2013 TJ Holowaychuk
@@ -4578,7 +5212,7 @@ function escapeHtml(string) {
     : html;
 }
 
-},{}],13:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -4666,7 +5300,7 @@ module.exports = function extend() {
 };
 
 
-},{}],14:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 module.exports = stringify
 function stringify (obj) {
   return JSON.stringify(obj, function (key, value) {
@@ -4680,7 +5314,364 @@ function stringify (obj) {
   })
 }
 
-},{}],15:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
+(function (global){
+var topLevel = typeof global !== 'undefined' ? global :
+    typeof window !== 'undefined' ? window : {}
+var minDoc = require('min-document');
+
+if (typeof document !== 'undefined') {
+    module.exports = document;
+} else {
+    var doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'];
+
+    if (!doccy) {
+        doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'] = minDoc;
+    }
+
+    module.exports = doccy;
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"min-document":2}],37:[function(require,module,exports){
+(function (global){
+if (typeof window !== "undefined") {
+    module.exports = window;
+} else if (typeof global !== "undefined") {
+    module.exports = global;
+} else if (typeof self !== "undefined"){
+    module.exports = self;
+} else {
+    module.exports = {};
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],38:[function(require,module,exports){
+module.exports = attributeToProperty
+
+var transform = {
+  'class': 'className',
+  'for': 'htmlFor',
+  'http-equiv': 'httpEquiv'
+}
+
+function attributeToProperty (h) {
+  return function (tagName, attrs, children) {
+    for (var attr in attrs) {
+      if (attr in transform) {
+        attrs[transform[attr]] = attrs[attr]
+        delete attrs[attr]
+      }
+    }
+    return h(tagName, attrs, children)
+  }
+}
+
+},{}],39:[function(require,module,exports){
+var attrToProp = require('hyperscript-attribute-to-property')
+
+var VAR = 0, TEXT = 1, OPEN = 2, CLOSE = 3, ATTR = 4
+var ATTR_KEY = 5, ATTR_KEY_W = 6
+var ATTR_VALUE_W = 7, ATTR_VALUE = 8
+var ATTR_VALUE_SQ = 9, ATTR_VALUE_DQ = 10
+var ATTR_EQ = 11, ATTR_BREAK = 12
+var COMMENT = 13
+
+module.exports = function (h, opts) {
+  if (!opts) opts = {}
+  var concat = opts.concat || function (a, b) {
+    return String(a) + String(b)
+  }
+  if (opts.attrToProp !== false) {
+    h = attrToProp(h)
+  }
+
+  return function (strings) {
+    var state = TEXT, reg = ''
+    var arglen = arguments.length
+    var parts = []
+
+    for (var i = 0; i < strings.length; i++) {
+      if (i < arglen - 1) {
+        var arg = arguments[i+1]
+        var p = parse(strings[i])
+        var xstate = state
+        if (xstate === ATTR_VALUE_DQ) xstate = ATTR_VALUE
+        if (xstate === ATTR_VALUE_SQ) xstate = ATTR_VALUE
+        if (xstate === ATTR_VALUE_W) xstate = ATTR_VALUE
+        if (xstate === ATTR) xstate = ATTR_KEY
+        p.push([ VAR, xstate, arg ])
+        parts.push.apply(parts, p)
+      } else parts.push.apply(parts, parse(strings[i]))
+    }
+
+    var tree = [null,{},[]]
+    var stack = [[tree,-1]]
+    for (var i = 0; i < parts.length; i++) {
+      var cur = stack[stack.length-1][0]
+      var p = parts[i], s = p[0]
+      if (s === OPEN && /^\//.test(p[1])) {
+        var ix = stack[stack.length-1][1]
+        if (stack.length > 1) {
+          stack.pop()
+          stack[stack.length-1][0][2][ix] = h(
+            cur[0], cur[1], cur[2].length ? cur[2] : undefined
+          )
+        }
+      } else if (s === OPEN) {
+        var c = [p[1],{},[]]
+        cur[2].push(c)
+        stack.push([c,cur[2].length-1])
+      } else if (s === ATTR_KEY || (s === VAR && p[1] === ATTR_KEY)) {
+        var key = ''
+        var copyKey
+        for (; i < parts.length; i++) {
+          if (parts[i][0] === ATTR_KEY) {
+            key = concat(key, parts[i][1])
+          } else if (parts[i][0] === VAR && parts[i][1] === ATTR_KEY) {
+            if (typeof parts[i][2] === 'object' && !key) {
+              for (copyKey in parts[i][2]) {
+                if (parts[i][2].hasOwnProperty(copyKey) && !cur[1][copyKey]) {
+                  cur[1][copyKey] = parts[i][2][copyKey]
+                }
+              }
+            } else {
+              key = concat(key, parts[i][2])
+            }
+          } else break
+        }
+        if (parts[i][0] === ATTR_EQ) i++
+        var j = i
+        for (; i < parts.length; i++) {
+          if (parts[i][0] === ATTR_VALUE || parts[i][0] === ATTR_KEY) {
+            if (!cur[1][key]) cur[1][key] = strfn(parts[i][1])
+            else cur[1][key] = concat(cur[1][key], parts[i][1])
+          } else if (parts[i][0] === VAR
+          && (parts[i][1] === ATTR_VALUE || parts[i][1] === ATTR_KEY)) {
+            if (!cur[1][key]) cur[1][key] = strfn(parts[i][2])
+            else cur[1][key] = concat(cur[1][key], parts[i][2])
+          } else {
+            if (key.length && !cur[1][key] && i === j
+            && (parts[i][0] === CLOSE || parts[i][0] === ATTR_BREAK)) {
+              // https://html.spec.whatwg.org/multipage/infrastructure.html#boolean-attributes
+              // empty string is falsy, not well behaved value in browser
+              cur[1][key] = key.toLowerCase()
+            }
+            break
+          }
+        }
+      } else if (s === ATTR_KEY) {
+        cur[1][p[1]] = true
+      } else if (s === VAR && p[1] === ATTR_KEY) {
+        cur[1][p[2]] = true
+      } else if (s === CLOSE) {
+        if (selfClosing(cur[0]) && stack.length) {
+          var ix = stack[stack.length-1][1]
+          stack.pop()
+          stack[stack.length-1][0][2][ix] = h(
+            cur[0], cur[1], cur[2].length ? cur[2] : undefined
+          )
+        }
+      } else if (s === VAR && p[1] === TEXT) {
+        if (p[2] === undefined || p[2] === null) p[2] = ''
+        else if (!p[2]) p[2] = concat('', p[2])
+        if (Array.isArray(p[2][0])) {
+          cur[2].push.apply(cur[2], p[2])
+        } else {
+          cur[2].push(p[2])
+        }
+      } else if (s === TEXT) {
+        cur[2].push(p[1])
+      } else if (s === ATTR_EQ || s === ATTR_BREAK) {
+        // no-op
+      } else {
+        throw new Error('unhandled: ' + s)
+      }
+    }
+
+    if (tree[2].length > 1 && /^\s*$/.test(tree[2][0])) {
+      tree[2].shift()
+    }
+
+    if (tree[2].length > 2
+    || (tree[2].length === 2 && /\S/.test(tree[2][1]))) {
+      throw new Error(
+        'multiple root elements must be wrapped in an enclosing tag'
+      )
+    }
+    if (Array.isArray(tree[2][0]) && typeof tree[2][0][0] === 'string'
+    && Array.isArray(tree[2][0][2])) {
+      tree[2][0] = h(tree[2][0][0], tree[2][0][1], tree[2][0][2])
+    }
+    return tree[2][0]
+
+    function parse (str) {
+      var res = []
+      if (state === ATTR_VALUE_W) state = ATTR
+      for (var i = 0; i < str.length; i++) {
+        var c = str.charAt(i)
+        if (state === TEXT && c === '<') {
+          if (reg.length) res.push([TEXT, reg])
+          reg = ''
+          state = OPEN
+        } else if (c === '>' && !quot(state) && state !== COMMENT) {
+          if (state === OPEN) {
+            res.push([OPEN,reg])
+          } else if (state === ATTR_KEY) {
+            res.push([ATTR_KEY,reg])
+          } else if (state === ATTR_VALUE && reg.length) {
+            res.push([ATTR_VALUE,reg])
+          }
+          res.push([CLOSE])
+          reg = ''
+          state = TEXT
+        } else if (state === COMMENT && /-$/.test(reg) && c === '-') {
+          if (opts.comments) {
+            res.push([ATTR_VALUE,reg.substr(0, reg.length - 1)],[CLOSE])
+          }
+          reg = ''
+          state = TEXT
+        } else if (state === OPEN && /^!--$/.test(reg)) {
+          if (opts.comments) {
+            res.push([OPEN, reg],[ATTR_KEY,'comment'],[ATTR_EQ])
+          }
+          reg = c
+          state = COMMENT
+        } else if (state === TEXT || state === COMMENT) {
+          reg += c
+        } else if (state === OPEN && /\s/.test(c)) {
+          res.push([OPEN, reg])
+          reg = ''
+          state = ATTR
+        } else if (state === OPEN) {
+          reg += c
+        } else if (state === ATTR && /[^\s"'=/]/.test(c)) {
+          state = ATTR_KEY
+          reg = c
+        } else if (state === ATTR && /\s/.test(c)) {
+          if (reg.length) res.push([ATTR_KEY,reg])
+          res.push([ATTR_BREAK])
+        } else if (state === ATTR_KEY && /\s/.test(c)) {
+          res.push([ATTR_KEY,reg])
+          reg = ''
+          state = ATTR_KEY_W
+        } else if (state === ATTR_KEY && c === '=') {
+          res.push([ATTR_KEY,reg],[ATTR_EQ])
+          reg = ''
+          state = ATTR_VALUE_W
+        } else if (state === ATTR_KEY) {
+          reg += c
+        } else if ((state === ATTR_KEY_W || state === ATTR) && c === '=') {
+          res.push([ATTR_EQ])
+          state = ATTR_VALUE_W
+        } else if ((state === ATTR_KEY_W || state === ATTR) && !/\s/.test(c)) {
+          res.push([ATTR_BREAK])
+          if (/[\w-]/.test(c)) {
+            reg += c
+            state = ATTR_KEY
+          } else state = ATTR
+        } else if (state === ATTR_VALUE_W && c === '"') {
+          state = ATTR_VALUE_DQ
+        } else if (state === ATTR_VALUE_W && c === "'") {
+          state = ATTR_VALUE_SQ
+        } else if (state === ATTR_VALUE_DQ && c === '"') {
+          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
+          reg = ''
+          state = ATTR
+        } else if (state === ATTR_VALUE_SQ && c === "'") {
+          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
+          reg = ''
+          state = ATTR
+        } else if (state === ATTR_VALUE_W && !/\s/.test(c)) {
+          state = ATTR_VALUE
+          i--
+        } else if (state === ATTR_VALUE && /\s/.test(c)) {
+          res.push([ATTR_VALUE,reg],[ATTR_BREAK])
+          reg = ''
+          state = ATTR
+        } else if (state === ATTR_VALUE || state === ATTR_VALUE_SQ
+        || state === ATTR_VALUE_DQ) {
+          reg += c
+        }
+      }
+      if (state === TEXT && reg.length) {
+        res.push([TEXT,reg])
+        reg = ''
+      } else if (state === ATTR_VALUE && reg.length) {
+        res.push([ATTR_VALUE,reg])
+        reg = ''
+      } else if (state === ATTR_VALUE_DQ && reg.length) {
+        res.push([ATTR_VALUE,reg])
+        reg = ''
+      } else if (state === ATTR_VALUE_SQ && reg.length) {
+        res.push([ATTR_VALUE,reg])
+        reg = ''
+      } else if (state === ATTR_KEY) {
+        res.push([ATTR_KEY,reg])
+        reg = ''
+      }
+      return res
+    }
+  }
+
+  function strfn (x) {
+    if (typeof x === 'function') return x
+    else if (typeof x === 'string') return x
+    else if (x && typeof x === 'object') return x
+    else return concat('', x)
+  }
+}
+
+function quot (state) {
+  return state === ATTR_VALUE_SQ || state === ATTR_VALUE_DQ
+}
+
+var hasOwn = Object.prototype.hasOwnProperty
+function has (obj, key) { return hasOwn.call(obj, key) }
+
+var closeRE = RegExp('^(' + [
+  'area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command', 'embed',
+  'frame', 'hr', 'img', 'input', 'isindex', 'keygen', 'link', 'meta', 'param',
+  'source', 'track', 'wbr', '!--',
+  // SVG TAGS
+  'animate', 'animateTransform', 'circle', 'cursor', 'desc', 'ellipse',
+  'feBlend', 'feColorMatrix', 'feComposite',
+  'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
+  'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR',
+  'feGaussianBlur', 'feImage', 'feMergeNode', 'feMorphology',
+  'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile',
+  'feTurbulence', 'font-face-format', 'font-face-name', 'font-face-uri',
+  'glyph', 'glyphRef', 'hkern', 'image', 'line', 'missing-glyph', 'mpath',
+  'path', 'polygon', 'polyline', 'rect', 'set', 'stop', 'tref', 'use', 'view',
+  'vkern'
+].join('|') + ')(?:[\.#][a-zA-Z0-9\u007F-\uFFFF_:-]+)*$')
+function selfClosing (tag) { return closeRE.test(tag) }
+
+},{"hyperscript-attribute-to-property":38}],40:[function(require,module,exports){
+var inserted = {};
+
+module.exports = function (css, options) {
+    if (inserted[css]) return;
+    inserted[css] = true;
+    
+    var elem = document.createElement('style');
+    elem.setAttribute('type', 'text/css');
+
+    if ('textContent' in elem) {
+      elem.textContent = css;
+    } else {
+      elem.styleSheet.cssText = css;
+    }
+    
+    var head = document.getElementsByTagName('head')[0];
+    if (options && options.prepend) {
+        head.insertBefore(elem, head.childNodes[0]);
+    } else {
+        head.appendChild(elem);
+    }
+};
+
+},{}],41:[function(require,module,exports){
 'use strict'
 var type = require('component-type')
 var CircularJSON = require('circular-json')
@@ -4723,7 +5714,7 @@ function javascriptserialize () {
   })
 }
 
-},{"circular-json":6,"component-type":7,"dom-serialize":9,"fnjson/source/node_modules/_stringify":14}],16:[function(require,module,exports){
+},{"circular-json":8,"component-type":9,"dom-serialize":30,"fnjson/source/node_modules/_stringify":35}],42:[function(require,module,exports){
 /**
 The following batches are equivalent:
 
@@ -4780,7 +5771,7 @@ if (typeof define === "function" && define.amd) {
 }
 
 
-},{"./lib/beautify":19,"./lib/beautify-css":17,"./lib/beautify-html":18}],17:[function(require,module,exports){
+},{"./lib/beautify":45,"./lib/beautify-css":43,"./lib/beautify-html":44}],43:[function(require,module,exports){
 (function (global){
 /*jshint curly:true, eqeqeq:true, laxbreak:true, noempty:false */
 /*
@@ -5275,7 +6266,7 @@ if (typeof define === "function" && define.amd) {
 }());
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],18:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 (function (global){
 /*jshint curly:true, eqeqeq:true, laxbreak:true, noempty:false */
 /*
@@ -6301,7 +7292,7 @@ if (typeof define === "function" && define.amd) {
 }());
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./beautify-css.js":17,"./beautify.js":19}],19:[function(require,module,exports){
+},{"./beautify-css.js":43,"./beautify.js":45}],45:[function(require,module,exports){
 (function (global){
 /*jshint curly:true, eqeqeq:true, laxbreak:true, noempty:false */
 /*
@@ -8506,7 +9497,96 @@ if (typeof define === "function" && define.amd) {
 }());
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],20:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
+/* global MutationObserver */
+var document = require('global/document')
+var window = require('global/window')
+var watch = Object.create(null)
+var KEY_ID = 'onloadid' + (new Date() % 9e6).toString(36)
+var KEY_ATTR = 'data-' + KEY_ID
+var INDEX = 0
+
+if (window && window.MutationObserver) {
+  var observer = new MutationObserver(function (mutations) {
+    if (Object.keys(watch).length < 1) return
+    for (var i = 0; i < mutations.length; i++) {
+      if (mutations[i].attributeName === KEY_ATTR) {
+        eachAttr(mutations[i], turnon, turnoff)
+        continue
+      }
+      eachMutation(mutations[i].removedNodes, turnoff)
+      eachMutation(mutations[i].addedNodes, turnon)
+    }
+  })
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeOldValue: true,
+    attributeFilter: [KEY_ATTR]
+  })
+}
+
+module.exports = function onload (el, on, off, caller) {
+  on = on || function () {}
+  off = off || function () {}
+  el.setAttribute(KEY_ATTR, 'o' + INDEX)
+  watch['o' + INDEX] = [on, off, 0, caller || onload.caller]
+  INDEX += 1
+  return el
+}
+
+function turnon (index, el) {
+  if (watch[index][0] && watch[index][2] === 0) {
+    watch[index][0](el)
+    watch[index][2] = 1
+  }
+}
+
+function turnoff (index, el) {
+  if (watch[index][1] && watch[index][2] === 1) {
+    watch[index][1](el)
+    watch[index][2] = 0
+  }
+}
+
+function eachAttr (mutation, on, off) {
+  var newValue = mutation.target.getAttribute(KEY_ATTR)
+  if (sameOrigin(mutation.oldValue, newValue)) {
+    watch[newValue] = watch[mutation.oldValue]
+    return
+  }
+  if (watch[mutation.oldValue]) {
+    off(mutation.oldValue, mutation.target)
+  }
+  if (watch[newValue]) {
+    on(newValue, mutation.target)
+  }
+}
+
+function sameOrigin (oldValue, newValue) {
+  if (!oldValue || !newValue) return false
+  return watch[oldValue][3] === watch[newValue][3]
+}
+
+function eachMutation (nodes, fn) {
+  var keys = Object.keys(watch)
+  for (var i = 0; i < nodes.length; i++) {
+    if (nodes[i] && nodes[i].getAttribute && nodes[i].getAttribute(KEY_ATTR)) {
+      var onloadid = nodes[i].getAttribute(KEY_ATTR)
+      keys.forEach(function (k) {
+        if (onloadid === k) {
+          fn(k, nodes[i])
+        }
+      })
+    }
+    if (nodes[i].childNodes.length > 0) {
+      eachMutation(nodes[i].childNodes, fn)
+    }
+  }
+}
+
+},{"global/document":36,"global/window":37}],47:[function(require,module,exports){
 /**
  * This file automatically generated from `pre-publish.js`.
  * Do not manually edit.
@@ -8531,14 +9611,17 @@ module.exports = {
   "wbr": true
 };
 
-},{}],21:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
-var api = require('..')()
+window.domconsole = require('..')
+window.demo = domconsole()
 
 console.log(new Buffer(5))
 
 var x = { leaf: 'leaf' }
-x['aCircle'] = x
+x['circular1'] = x
+x.y = {}
+x.y.circular2 = x.y
 console.log(x)
 
 console.log({a:'x', fn:function(x){return 5}})
@@ -8556,7 +9639,7 @@ console.log((function(){ return arguments })(1,true))
 console.log([])
 console.log(document.createElement('div'))
 console.log(NaN)
-debugger
+
 console.log({a: '5'})
 console.error({a: '5'})
 console.log(document.createElement('div'))
@@ -8573,6 +9656,10 @@ api.toggle() // expand or minimize the dom-console
 console.log(api.serialize()) // retrieve the log that was logged to the dom-console
 api.clear() // clear the content of the dom-console
 
+api.log('visible in devtools console & only this dom-console instance')
+api.info('visible in devtools console & only this dom-console instance')
+api.error('visible in devtools console & only this dom-console instance')
+
 // also logs errors nicely
 function test (p) { var x = JSON.parse(p) }
 test(function(){})
@@ -8580,4 +9667,4 @@ test(function(){})
 console.log(new Error('Ups! Something wrong...'))
 console.error(new Error('Ups! Something wrong...'))
 
-},{"..":5,"buffer":2}]},{},[21]);
+},{"..":6,"buffer":3}]},{},[48]);

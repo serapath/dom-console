@@ -204,14 +204,15 @@ function dispatcher (konsole, stats, opts) {
         lines.forEach(function (line) {
           var el = bel`<pre class="${css.line} ${css[mode]}">${line}</pre>`
           konsole.appendChild(el)
-          if (isHidden) {
-            stats[mode].innerHTML = (stats[mode].innerHTML|0) + 1
-            stats[mode].style.visibility = ''
-          }
         })
         var sep = bel`<hr class=${css.seperator}>`
         konsole.appendChild(sep)
-        if (!isHidden) sep.scrollIntoView()
+        if (isHidden) {
+          stats[mode].innerHTML = (stats[mode].innerHTML|0) + 1
+          stats[mode].style.visibility = ''
+        } else {
+          sep.scrollIntoView()
+        }
       })
     }
   }
